@@ -1,0 +1,32 @@
+@import "./theme/tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Clearance for the fixed mobile bottom nav (components/layout/MobileBottomNav)
+   so it never overlaps page content, without editing every page's markup. */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: 56px;
+  }
+}

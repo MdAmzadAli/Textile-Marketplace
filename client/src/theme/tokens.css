@@ -1,0 +1,30 @@
+/* Re-export of theme/tokens.ts as CSS custom properties.
+   For JS/canvas/chart code (e.g. Recharts) that can't consume Tailwind classes directly.
+   Keep in sync with theme/tokens.ts by hand — both are edited together on a rebrand. */
+
+:root {
+  --color-primary: #2B3A67;
+  --color-primary-dark: #1E2A4A;
+  --color-accent: #C05C3B;
+  --color-bg: #FAF7F2;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #22201D;
+  --color-text-muted: #6B6459;
+  --color-border: #E8E2D8;
+  --color-success: #4C8B5B;
+  --color-warning: #C79A3B;
+  --color-error: #B5453A;
+
+  --font-display: "Fraunces", serif;
+  --font-body: "Inter", sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+
+  --shadow-card: 0 2px 8px rgba(34, 32, 29, 0.06);
+  --shadow-modal: 0 8px 32px rgba(34, 32, 29, 0.16);
+
+  --transition-fast: 150ms ease-out;
+  --transition-base: 250ms ease-out;
+  --transition-slow: 400ms ease-out;
+}

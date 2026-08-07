@@ -1,0 +1,191 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector]
+}
+
+enum Role {
+  buyer
+  supplier
+  admin
+}
+
+enum ProductStatus {
+  active
+  out_of_stock
+  inactive
+}
+
+enum OrderStatus {
+  pending
+  accepted
+  preparing
+  ready
+  completed
+}
+
+model User {
+  id             String          @id @default(uuid())
+  email          String          @unique
+  passwordHash   String
+  role           Role
+  sellerEnabled  Boolean         @default(false)
+  sellerAccessExpiresAt DateTime?
+  createdAt      DateTime        @default(now())
+  isActive       Boolean         @default(true)
+  buyerProfile   BuyerProfile?
+  supplierProfile SupplierProfile?
+  activityLogs   ActivityLog[]
+}
+
+model BuyerProfile {
+  userId               String   @id
+  user                 User     @relation(fields: [userId], references: [id])
+  businessType          String   @default("")
+  industry              String   @default("")
+  categoriesOfInterest  String[] @default([])
+  fabricPreferences     String[] @default([])
+  typicalOrderQty       Int      @default(0)
+  budgetRange           String   @default("")
+  onboardingCompleted   Boolean  @default(false)
+  additionalPrefs       Json?
+  cart                 Cart?
+  orders               Order[]
+  addresses            Address[]
+}
+
+model Address {
+  id          String       @id @default(uuid())
+  buyerId     String
+  buyer       BuyerProfile @relation(fields: [buyerId], references: [userId], onDelete: Cascade)
+  label       String
+  fullName    String
+  countryCode String
+  phone       String
+  addressLine String
+  city        String
+  state       String
+  postalCode  String
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([buyerId])
+}
+
+model SupplierProfile {
+  userId        String   @id
+  user          User     @relation(fields: [userId], references: [id])
+  businessName  String
+  businessType  String
+  contactInfo   String
+  address       String
+  operatingHours String
+  categories    String[]
+  fabricTypes   String[]
+  moq           Int
+  additionalInfo Json?
+  products      Product[]
+}
+
+model Category {
+  id       String     @id @default(uuid())
+  name     String
+  slug     String     @unique
+  parentId String?
+  parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryToCategory")
+  products Product[]
+}
+
+model Product {
+  id             String        @id @default(uuid())
+  supplierId     String
+  supplier       SupplierProfile @relation(fields: [supplierId], references: [userId])
+  name           String
+  categoryId     String
+  category       Category      @relation(fields: [categoryId], references: [id])
+  description    String
+  images         String[]
+  colors         String[]
+  specs          Json?
+  stock          Int
+  price          Decimal       @db.Decimal(10, 2)
+  moq            Int
+  unit           String        @default("meter")
+  status         ProductStatus @default(active)
+  rating         Float         @default(0)
+  ratingCount    Int           @default(0)
+  createdAt      DateTime      @default(now())
+  embedding      Unsupported("vector(384)")?
+  imageEmbedding Unsupported("vector(512)")?
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+
+  @@index([supplierId])
+  @@index([categoryId])
+}
+
+model Cart {
+  id       String     @id @default(uuid())
+  buyerId  String     @unique
+  buyer    BuyerProfile @relation(fields: [buyerId], references: [userId])
+  items    CartItem[]
+}
+
+model CartItem {
+  id        String  @id @default(uuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  selectedColor String @default("")
+
+  @@unique([cartId, productId, selectedColor])
+}
+
+model Order {
+  id           String      @id @default(uuid())
+  buyerId      String
+  buyer        BuyerProfile @relation(fields: [buyerId], references: [userId])
+  status       OrderStatus @default(pending)
+  shippingInfo Json
+  createdAt    DateTime    @default(now())
+  items        OrderItem[]
+
+  @@index([buyerId])
+}
+
+model OrderItem {
+  id           String  @id @default(uuid())
+  orderId      String
+  order        Order   @relation(fields: [orderId], references: [id])
+  productId    String
+  product      Product @relation(fields: [productId], references: [id])
+  supplierId   String
+  quantity     Int
+  priceAtOrder Decimal @db.Decimal(10, 2)
+  selectedColor String @default("")
+
+  @@index([orderId])
+  @@index([supplierId])
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  actor      User     @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
